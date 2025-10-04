@@ -9,10 +9,11 @@ import com.knu.storyboard.user.business.dto.UserEntityDto;
 import com.knu.storyboard.user.business.port.UserRepository;
 import com.knu.storyboard.user.domain.User;
 import com.knu.storyboard.user.domain.UserStatus;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -40,7 +41,7 @@ public class UserService {
 
     public void deleteUser(UUID userId) {
         oAuthRepository.deleteByUserId(userId);
-        
+
         userRepository.delete(userId);
     }
 }

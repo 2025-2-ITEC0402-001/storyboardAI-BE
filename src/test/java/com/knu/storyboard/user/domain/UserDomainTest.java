@@ -1,6 +1,5 @@
 package com.knu.storyboard.user.domain;
 
-import com.knu.storyboard.user.business.dto.UserEntityDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

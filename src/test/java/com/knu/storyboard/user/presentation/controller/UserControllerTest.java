@@ -3,7 +3,6 @@ package com.knu.storyboard.user.presentation.controller;
 import com.knu.storyboard.auth.business.dto.JwtRefreshRequest;
 import com.knu.storyboard.auth.business.dto.JwtResponse;
 import com.knu.storyboard.auth.business.service.JwtService;
-import com.knu.storyboard.auth.domain.AuthUser;
 import com.knu.storyboard.user.business.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ class UserControllerTest {
         // Given
         JwtRefreshRequest request = new JwtRefreshRequest("refresh-token", "COMPUTER");
         JwtResponse expectedResponse = new JwtResponse("new-access-token", "new-refresh-token");
-        
+
         when(jwtService.refreshAccessToken(request)).thenReturn(expectedResponse);
 
         // When

@@ -55,7 +55,7 @@ class OAuthRepositoryImplTest {
         String socialUserId = "social123";
         OAuthProvider provider = OAuthProvider.KAKAO;
         OAuthMappingEntityDto expectedDto = createMockEntityDto();
-        
+
         when(oAuthMappingJpaRepository.findBySocialUserIdAndProvider(socialUserId, provider))
                 .thenReturn(Optional.of(mockEntity));
         when(mockEntity.toEntityDto()).thenReturn(expectedDto);
@@ -75,7 +75,7 @@ class OAuthRepositoryImplTest {
         // Given
         String socialUserId = "nonexistent";
         OAuthProvider provider = OAuthProvider.KAKAO;
-        
+
         when(oAuthMappingJpaRepository.findBySocialUserIdAndProvider(socialUserId, provider))
                 .thenReturn(Optional.empty());
 
@@ -93,7 +93,7 @@ class OAuthRepositoryImplTest {
         // Given
         UUID mappingId = UUID.randomUUID();
         OAuthTokenDto tokenDto = mock(OAuthTokenDto.class);
-        
+
         when(oAuthMappingJpaRepository.findById(mappingId)).thenReturn(Optional.of(mockEntity));
 
         // When
@@ -110,14 +110,14 @@ class OAuthRepositoryImplTest {
         // Given
         UUID mappingId = UUID.randomUUID();
         OAuthTokenDto tokenDto = mock(OAuthTokenDto.class);
-        
+
         when(oAuthMappingJpaRepository.findById(mappingId)).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> oAuthRepository.updateToken(mappingId, tokenDto))
                 .isInstanceOf(OAuthNotFoundException.class)
                 .hasMessage("업데이트할 OAuth 매핑을 찾을 수 없습니다: " + mappingId);
-        
+
         verify(mockEntity, never()).updateFromTokenDto(any());
     }
 

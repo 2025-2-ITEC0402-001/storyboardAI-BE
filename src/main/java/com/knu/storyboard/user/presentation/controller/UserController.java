@@ -46,9 +46,9 @@ public class UserController implements UserApi {
     public ResponseEntity<Void> deleteAccount(@Parameter(hidden = true) @Login AuthUser authUser) {
         jwtService.logout(authUser.getId(), "COMPUTER");
         jwtService.logout(authUser.getId(), "PHONE");
-        
+
         userService.deleteUser(authUser.getId());
-        
+
         return ResponseEntity.ok().build();
     }
 }

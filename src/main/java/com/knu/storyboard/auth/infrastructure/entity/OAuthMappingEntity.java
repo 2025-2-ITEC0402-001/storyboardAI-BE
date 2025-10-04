@@ -18,8 +18,8 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "OAUTH_MAPPING", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"socialUserId", "provider"}))
+@Table(name = "OAUTH_MAPPING",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"socialUserId", "provider"}))
 public class OAuthMappingEntity {
     @Id
     @UuidGenerator
