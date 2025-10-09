@@ -32,6 +32,10 @@ public class TestEnvironmentConfig implements BeforeAllCallback {
     private static final String AWS_SECRET_ACCESS_KEY = "abc123xyz456def789ghi000testKeySecretValue";
     private static final String S3_BUCKET_NAME = "my-test-bucket";
 
+    // AI 테스트용 설정값
+    private static final String TEST_AI_GENERATE_SERVER_URL = "http://localhost:15000";
+    private static final String TEST_AI_REVISE_SERVER_URL = "http://localhost:15001";
+
     @Override
     public void beforeAll(ExtensionContext context) {
         // JWT 설정
@@ -60,5 +64,9 @@ public class TestEnvironmentConfig implements BeforeAllCallback {
         System.setProperty("AWS_ACCESS_KEY_ID", AWS_ACCESS_KEY_ID);
         System.setProperty("AWS_SECRET_ACCESS_KEY", AWS_SECRET_ACCESS_KEY);
         System.setProperty("S3_BUCKET_NAME", S3_BUCKET_NAME);
+
+        // AI 설정
+        System.setProperty("AI_GENERATE_SERVER_URL", TEST_AI_GENERATE_SERVER_URL);
+        System.setProperty("AI_REVISE_SERVER_URL", TEST_AI_REVISE_SERVER_URL);
     }
 }
