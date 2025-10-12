@@ -23,6 +23,9 @@ AI 기반 스토리보드 자동 생성 플랫폼의 백엔드 API 서버입니�
 └── common/        # 공통 설정 및 예외 처리
 ```
 
+### 웹 어플리케이션 아키텍쳐
+<img width="2434" height="1132" alt="image" src="https://github.com/user-attachments/assets/125bfad5-56d2-40e2-95e6-e7fd425a54f3" />
+
 ## 핵심 기능 상세
 
 ### 1. Project Canvas 저장 방식
