@@ -50,3 +50,6 @@ Icon
 
 ### dev ###
 application-dev.properties
+
+### deployment ###
+nginx.conf
