@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.view.RedirectView;
 
-@RequestMapping("/auth/oauth")
+@RequestMapping("/api/auth/oauth")
 @Tag(name = "OAuth", description = "OAuth 관련 API")
 public interface OAuthApi {
 
