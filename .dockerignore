@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+README.md
+
+# Build artifacts
+build/
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+Dockerfile
+docker-compose.yml
+nginx-local.conf
+.dockerignore
+
+# CI/CD
+.github/
+deploy.sh
+get-current-port.sh
+nginx.conf
+
+# Test reports
+reports/
+
+# Temporary files
+tmp/
+.tmp
