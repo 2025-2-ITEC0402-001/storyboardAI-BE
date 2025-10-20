@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, Deploy/issue-#11 ]
+    branches: [ main ]
 
 permissions:
   contents: read
