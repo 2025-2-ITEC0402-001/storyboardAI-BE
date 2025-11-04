@@ -8,25 +8,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class AIWebClientConfig {
 
-    @Value("${storyboard.ai.generate.url}")
-    private String generateServiceUrl;
-
-    @Value("${storyboard.ai.revise.url}")
-    private String reviseServiceUrl;
+    @Value("${storyboard.ai.server.url}")
+    private String aiServerUrl;
 
     @Bean
-    public WebClient generateWebClient() {
+    public WebClient aiWebClient() {
         return WebClient.builder()
-                .baseUrl(generateServiceUrl)
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10MB
-                .build();
-    }
-
-    @Bean
-    public WebClient reviseWebClient() {
-        return WebClient.builder()
-                .baseUrl(reviseServiceUrl)
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10MB
+                .baseUrl(aiServerUrl)
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(50 * 1024 * 1024)) // 50MB
                 .build();
     }
 }

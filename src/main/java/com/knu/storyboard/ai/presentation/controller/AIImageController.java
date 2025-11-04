@@ -3,6 +3,7 @@ package com.knu.storyboard.ai.presentation.controller;
 import com.knu.storyboard.ai.business.dto.GenerateImageRequest;
 import com.knu.storyboard.ai.business.dto.ReviseImageRequest;
 import com.knu.storyboard.ai.presentation.api.AIImageApi;
+import com.knu.storyboard.ai.presentation.dto.ReviseImageApiRequest;
 import com.knu.storyboard.aiimage.business.dto.ImageGenerationTaskResponse;
 import com.knu.storyboard.aiimage.business.service.AsyncAIImageService;
 import com.knu.storyboard.auth.domain.AuthUser;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,10 +22,14 @@ public class AIImageController implements AIImageApi {
 
     @Override
     @RequireAuth
-    public ResponseEntity<ImageGenerationTaskResponse> generateImage(String prompt, Integer height, Integer width,
-                                                                     Double guidanceScale, Integer numInferenceSteps,
-                                                                     Integer seed,
-                                                                     @Parameter(hidden = true) @Login AuthUser authUser) {
+    public ResponseEntity<ImageGenerationTaskResponse> generateImage(
+            String prompt, 
+            Integer height, 
+            Integer width,
+            Double guidanceScale, 
+            Integer numInferenceSteps,
+            Integer seed,
+            @Parameter(hidden = true) @Login AuthUser authUser) {
 
         GenerateImageRequest request = new GenerateImageRequest(
                 prompt, height, width, guidanceScale, numInferenceSteps, seed
@@ -38,13 +42,17 @@ public class AIImageController implements AIImageApi {
 
     @Override
     @RequireAuth
-    public ResponseEntity<ImageGenerationTaskResponse> reviseImage(MultipartFile image, String revisedPrompt,
-                                                                   Double strength, Double guidanceScale,
-                                                                   Integer numInferenceSteps, Integer seed,
-                                                                   @Parameter(hidden = true) @Login AuthUser authUser) {
+    public ResponseEntity<ImageGenerationTaskResponse> reviseImage(
+            ReviseImageApiRequest apiRequest,
+            @Parameter(hidden = true) @Login AuthUser authUser) {
 
         ReviseImageRequest request = new ReviseImageRequest(
-                image, revisedPrompt, strength, guidanceScale, numInferenceSteps, seed
+                apiRequest.image(),
+                apiRequest.revisedPrompt(),
+                apiRequest.strength(),
+                apiRequest.guidanceScale(),
+                apiRequest.numInferenceSteps(),
+                apiRequest.seed()
         );
 
         ImageGenerationTaskResponse response = asyncAIImageService.reviseStoryboardImageAsync(request);
