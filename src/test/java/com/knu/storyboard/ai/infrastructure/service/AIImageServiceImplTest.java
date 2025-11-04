@@ -28,10 +28,7 @@ import static org.mockito.Mockito.when;
 class AIImageServiceImplTest {
 
     @Mock
-    private WebClient generateWebClient;
-
-    @Mock
-    private WebClient reviseWebClient;
+    private WebClient aiWebClient;
 
     @Mock
     private WebClient.RequestBodyUriSpec requestBodyUriSpec;
@@ -49,7 +46,7 @@ class AIImageServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        aiImageService = new AIImageServiceImpl(generateWebClient, reviseWebClient);
+        aiImageService = new AIImageServiceImpl(aiWebClient);
     }
 
     @Test
@@ -66,7 +63,7 @@ class AIImageServiceImplTest {
         );
         byte[] expectedImageData = "test-image-data".getBytes();
 
-        when(generateWebClient.post()).thenReturn(requestBodyUriSpec);
+        when(aiWebClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
         when(requestBodySpec.contentType(any())).thenReturn(requestBodySpec);
         when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
@@ -78,7 +75,7 @@ class AIImageServiceImplTest {
 
         // Then
         assertThat(result).isEqualTo(expectedImageData);
-        verify(generateWebClient).post();
+        verify(aiWebClient).post();
         verify(requestBodySpec).bodyValue(request);
     }
 
@@ -95,7 +92,7 @@ class AIImageServiceImplTest {
                 42
         );
 
-        when(generateWebClient.post()).thenReturn(requestBodyUriSpec);
+        when(aiWebClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
         when(requestBodySpec.contentType(any())).thenReturn(requestBodySpec);
         when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
@@ -129,7 +126,7 @@ class AIImageServiceImplTest {
         );
         byte[] expectedImageData = "revised-image-data".getBytes();
 
-        when(reviseWebClient.post()).thenReturn(requestBodyUriSpec);
+        when(aiWebClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
         when(requestBodySpec.contentType(any())).thenReturn(requestBodySpec);
         when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
@@ -141,7 +138,7 @@ class AIImageServiceImplTest {
 
         // Then
         assertThat(result).isEqualTo(expectedImageData);
-        verify(reviseWebClient).post();
+        verify(aiWebClient).post();
     }
 
     @Test
@@ -195,7 +192,7 @@ class AIImageServiceImplTest {
                 42
         );
 
-        when(reviseWebClient.post()).thenReturn(requestBodyUriSpec);
+        when(aiWebClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
         when(requestBodySpec.contentType(any())).thenReturn(requestBodySpec);
         when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
@@ -206,5 +203,108 @@ class AIImageServiceImplTest {
         assertThatThrownBy(() -> aiImageService.reviseStoryboardImage(request))
                 .isInstanceOf(AIServiceException.class)
                 .hasMessageContaining("Failed to revise image");
+    }
+
+    @Test
+    @DisplayName("영상 생성 성공 테스트")
+    void generateVideo_ShouldReturnVideoGenerationInitResponse_WhenRequestIsValid() throws IOException {
+        // Given
+        MockMultipartFile originImage = new MockMultipartFile(
+                "origin_image",
+                "origin.png",
+                "image/png",
+                "origin-image-content".getBytes()
+        );
+        MockMultipartFile samMask = new MockMultipartFile(
+                "sam_mask",
+                "mask.png",
+                "image/png",
+                "mask-content".getBytes()
+        );
+        MockMultipartFile trajectoryData = new MockMultipartFile(
+                "trajectory_data",
+                "trajectory.json",
+                "application/json",
+                "{\"points\": []}".getBytes()
+        );
+
+        com.knu.storyboard.ai.business.dto.GenerateVideoRequest request =
+                new com.knu.storyboard.ai.business.dto.GenerateVideoRequest(
+                        originImage,
+                        samMask,
+                        trajectoryData,
+                        14
+                );
+
+        com.knu.storyboard.ai.business.dto.VideoGenerationInitResponse expectedResponse =
+                new com.knu.storyboard.ai.business.dto.VideoGenerationInitResponse(
+                        "processing",
+                        "test-job-id",
+                        "/status/test-job-id"
+                );
+
+        when(aiWebClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+        when(requestBodySpec.contentType(any())).thenReturn(requestBodySpec);
+        when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.onStatus(any(), any())).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(com.knu.storyboard.ai.business.dto.VideoGenerationInitResponse.class))
+                .thenReturn(Mono.just(expectedResponse));
+
+        // When
+        com.knu.storyboard.ai.business.dto.VideoGenerationInitResponse result = aiImageService.generateVideo(request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.status()).isEqualTo("processing");
+        assertThat(result.jobId()).isEqualTo("test-job-id");
+        verify(aiWebClient).post();
+    }
+
+    @Test
+    @DisplayName("영상 생성 실패 시 AIServiceException 발생")
+    void generateVideo_ShouldThrowAIServiceException_WhenWebClientFails() throws IOException {
+        // Given
+        MockMultipartFile originImage = new MockMultipartFile(
+                "origin_image",
+                "origin.png",
+                "image/png",
+                "origin-image-content".getBytes()
+        );
+        MockMultipartFile samMask = new MockMultipartFile(
+                "sam_mask",
+                "mask.png",
+                "image/png",
+                "mask-content".getBytes()
+        );
+        MockMultipartFile trajectoryData = new MockMultipartFile(
+                "trajectory_data",
+                "trajectory.json",
+                "application/json",
+                "{\"points\": []}".getBytes()
+        );
+
+        com.knu.storyboard.ai.business.dto.GenerateVideoRequest request =
+                new com.knu.storyboard.ai.business.dto.GenerateVideoRequest(
+                        originImage,
+                        samMask,
+                        trajectoryData,
+                        14
+                );
+
+        when(aiWebClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestBodySpec);
+        when(requestBodySpec.contentType(any())).thenReturn(requestBodySpec);
+        when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.onStatus(any(), any())).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(com.knu.storyboard.ai.business.dto.VideoGenerationInitResponse.class))
+                .thenReturn(Mono.error(new RuntimeException("Video generation error")));
+
+        // When & Then
+        assertThatThrownBy(() -> aiImageService.generateVideo(request))
+                .isInstanceOf(AIServiceException.class)
+                .hasMessageContaining("Failed to generate video");
     }
 }
