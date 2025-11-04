@@ -1,7 +1,10 @@
 package com.knu.storyboard.ai.infrastructure.service;
 
 import com.knu.storyboard.ai.business.dto.GenerateImageRequest;
+import com.knu.storyboard.ai.business.dto.GenerateVideoRequest;
 import com.knu.storyboard.ai.business.dto.ReviseImageRequest;
+import com.knu.storyboard.ai.business.dto.VideoGenerationInitResponse;
+import com.knu.storyboard.ai.business.dto.VideoGenerationStatusResponse;
 import com.knu.storyboard.ai.business.port.AIImageService;
 import com.knu.storyboard.ai.exception.AIBadRequestException;
 import com.knu.storyboard.ai.exception.AIServiceException;
@@ -23,18 +26,15 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class AIImageServiceImpl implements AIImageService {
 
-    @Qualifier("generateWebClient")
-    private final WebClient generateWebClient;
-
-    @Qualifier("reviseWebClient")
-    private final WebClient reviseWebClient;
+    @Qualifier("aiWebClient")
+    private final WebClient aiWebClient;
 
     @Override
     public byte[] generateStoryboardImage(GenerateImageRequest request) {
         log.info("Generating storyboard image with prompt: {}", request.prompt());
 
         try {
-            return generateWebClient.post()
+            return aiWebClient.post()
                     .uri("/generate-storyboard")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
@@ -67,7 +67,7 @@ public class AIImageServiceImpl implements AIImageService {
             formData.add("num_inference_steps", request.numInferenceSteps());
             formData.add("seed", request.seed());
 
-            return reviseWebClient.post()
+            return aiWebClient.post()
                     .uri("/revise-storyboard")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(BodyInserters.fromMultipartData(formData))
@@ -80,6 +80,94 @@ public class AIImageServiceImpl implements AIImageService {
         } catch (Exception e) {
             log.error("Failed to revise storyboard image", e);
             throw new AIServiceException("Failed to revise image: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public VideoGenerationInitResponse generateVideo(GenerateVideoRequest request) {
+        log.info("Generating video with frame number: {}", request.frameNumber());
+
+        try {
+            ByteArrayResource originImageResource = new ByteArrayResource(request.originImage().getBytes()) {
+                @Override
+                public String getFilename() {
+                    return request.originImage().getOriginalFilename();
+                }
+            };
+
+            ByteArrayResource samMaskResource = new ByteArrayResource(request.samMask().getBytes()) {
+                @Override
+                public String getFilename() {
+                    return request.samMask().getOriginalFilename();
+                }
+            };
+
+            ByteArrayResource trajectoryDataResource = new ByteArrayResource(request.trajectoryData().getBytes()) {
+                @Override
+                public String getFilename() {
+                    return request.trajectoryData().getOriginalFilename();
+                }
+            };
+
+            MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
+            formData.add("origin_image", originImageResource);
+            formData.add("sam_mask", samMaskResource);
+            formData.add("trajectory_data", trajectoryDataResource);
+            formData.add("frame_number", request.frameNumber());
+
+            log.info("Sending video generation request - origin_image: {}, sam_mask: {}, trajectory_data: {}, frame_number: {}", 
+                    originImageResource.getFilename(), samMaskResource.getFilename(), 
+                    trajectoryDataResource.getFilename(), request.frameNumber());
+
+            return aiWebClient.post()
+                    .uri("/generate")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(BodyInserters.fromMultipartData(formData))
+                    .retrieve()
+                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                            response -> response.bodyToMono(String.class)
+                                    .doOnNext(body -> log.error("Error response from AI server: {}", body))
+                                    .then(response.createException()))
+                    .bodyToMono(VideoGenerationInitResponse.class)
+                    .block();
+        } catch (IOException e) {
+            log.error("Failed to read video files", e);
+            throw new AIBadRequestException("Failed to read video files: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Failed to generate video", e);
+            throw new AIServiceException("Failed to generate video: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public VideoGenerationStatusResponse getVideoGenerationStatus(String jobId) {
+        log.info("Checking video generation status for jobId: {}", jobId);
+
+        try {
+            return aiWebClient.get()
+                    .uri("/status/{jobId}", jobId)
+                    .retrieve()
+                    .bodyToMono(VideoGenerationStatusResponse.class)
+                    .block();
+        } catch (Exception e) {
+            log.error("Failed to check video generation status", e);
+            throw new AIServiceException("Failed to check status: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public byte[] downloadGeneratedVideo(String jobId) {
+        log.info("Downloading generated video for jobId: {}", jobId);
+
+        try {
+            return aiWebClient.get()
+                    .uri("/api_jobs/{jobId}/output/generated_video.mp4", jobId)
+                    .retrieve()
+                    .bodyToMono(byte[].class)
+                    .block();
+        } catch (Exception e) {
+            log.error("Failed to download generated video", e);
+            throw new AIServiceException("Failed to download video: " + e.getMessage(), e);
         }
     }
 }
