@@ -1,23 +1,36 @@
 package com.knu.storyboard.auth.business.service;
 
-import com.knu.storyboard.auth.business.dto.*;
-import com.knu.storyboard.auth.business.port.OAuthRepository;
-import com.knu.storyboard.auth.business.port.OAuthService;
-import com.knu.storyboard.auth.business.port.TokenRepository;
-import com.knu.storyboard.auth.domain.*;
-import com.knu.storyboard.auth.exception.OAuthBadRequestException;
-import com.knu.storyboard.user.business.dto.UserEntityDto;
-import com.knu.storyboard.user.business.port.UserRepository;
-import com.knu.storyboard.user.business.service.UserFactory;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.knu.storyboard.auth.business.dto.JwtResponse;
+import com.knu.storyboard.auth.business.dto.OAuthContext;
+import com.knu.storyboard.auth.business.dto.OAuthLoginResponse;
+import com.knu.storyboard.auth.business.dto.OAuthMappingEntityDto;
+import com.knu.storyboard.auth.business.dto.OAuthTokenDto;
+import com.knu.storyboard.auth.business.dto.TokenDTO;
+import com.knu.storyboard.auth.business.port.OAuthRepository;
+import com.knu.storyboard.auth.business.port.OAuthService;
+import com.knu.storyboard.auth.business.port.TokenRepository;
+import com.knu.storyboard.auth.domain.DeviceType;
+import com.knu.storyboard.auth.domain.OAuthMapping;
+import com.knu.storyboard.auth.domain.OAuthProvider;
+import com.knu.storyboard.auth.domain.OAuthState;
+import com.knu.storyboard.auth.domain.OAuthToken;
+import com.knu.storyboard.auth.domain.OAuthUserInfo;
+import com.knu.storyboard.auth.domain.Token;
+import com.knu.storyboard.auth.exception.OAuthBadRequestException;
+import com.knu.storyboard.user.business.dto.UserEntityDto;
+import com.knu.storyboard.user.business.port.UserRepository;
+import com.knu.storyboard.user.business.service.UserFactory;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +54,7 @@ public class OAuthLoginService {
             throw new OAuthBadRequestException("이 제공자는 백엔드 리다이렉트를 지원하지 않습니다.");
         }
 
-        return oAuthService.getRedirectUrl(context.deviceType().name());
+        return oAuthService.getRedirectUrl(state);
     }
 
     @Transactional
@@ -51,7 +64,11 @@ public class OAuthLoginService {
         OAuthLoginResponse loginResponse = processOAuthLogin(context.oAuthProvider(), code,
                 context.deviceType());
 
-        StringBuilder redirectBuilder = new StringBuilder(appRedirectUri);
+        String targetRedirectUri = (context.redirectUrl() != null && !context.redirectUrl().isBlank())
+                ? context.redirectUrl()
+                : appRedirectUri;
+
+        StringBuilder redirectBuilder = new StringBuilder(targetRedirectUri);
 
         String urlFragmentDelimiter = "#";
 
@@ -64,8 +81,9 @@ public class OAuthLoginService {
 
     private OAuthContext parseOAuthContext(String provider, String state) {
         OAuthProvider oAuthProvider = OAuthProvider.fromString(provider);
-        DeviceType deviceType = DeviceType.fromString(state);
-        return OAuthContext.of(oAuthProvider, deviceType);
+        OAuthState oAuthState = OAuthState.fromStateParameter(state);
+        
+        return OAuthContext.of(oAuthProvider, oAuthState.deviceType(), oAuthState.redirectUrl());
     }
 
     @Transactional
